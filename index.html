@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bunbae — Saltbread Preorder</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f9f7ff;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      padding: 1.5rem 1rem 3rem;
+      color: #1a1a2e;
+    }
+
+    .container { width: 100%; max-width: 640px; }
+
+    .screen { display: none; }
+    .screen.active { display: block; }
+
+    .bun-header {
+      text-align: center;
+      padding: 1.5rem 0 1.5rem;
+      border-bottom: 0.5px solid #CECBF6;
+      margin-bottom: 1.5rem;
+    }
+    .bun-ears { display: flex; justify-content: center; gap: 7px; margin-bottom: 8px; }
+    .ear { width: 11px; height: 24px; border: 2.5px solid #534AB7; border-radius: 999px; }
+    .bun-logo { font-size: 26px; font-weight: 600; color: #534AB7; letter-spacing: -0.5px; }
+    .bun-sub { font-size: 11px; color: #7F77DD; letter-spacing: 2.5px; text-transform: uppercase; margin-top: 3px; }
+
+    .section-label {
+      font-size: 11px; color: #7F77DD; letter-spacing: 2px;
+      text-transform: uppercase; font-weight: 600; margin-bottom: 10px;
+    }
+
+    .savory-tag, .sweet-tag {
+      display: inline-block; font-size: 11px; padding: 2px 8px;
+      border-radius: 999px; font-weight: 500; margin-bottom: 6px;
+    }
+    .savory-tag { background: #EEEDFE; color: #3C3489; }
+    .sweet-tag  { background: #FBEAF0; color: #72243E; }
+
+    .menu-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(175px, 1fr));
+      gap: 10px; margin-bottom: 1.5rem;
+    }
+
+    .item-card {
+      background: #fff; border: 0.5px solid #CECBF6;
+      border-radius: 12px; padding: 0.875rem; cursor: pointer;
+      transition: border-color 0.15s;
+    }
+    .item-card:hover { border-color: #AFA9EC; }
+    .item-card.selected { border: 2px solid #534AB7; background: #EEEDFE; }
+
+    .item-name  { font-size: 14px; font-weight: 600; color: #1a1a2e; margin-bottom: 2px; }
+    .item-desc  { font-size: 12px; color: #666; margin-bottom: 8px; line-height: 1.4; }
+    .item-price { font-size: 14px; font-weight: 600; color: #534AB7; }
+
+    .qty-row { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+    .qty-btn {
+      width: 27px; height: 27px; border-radius: 50%;
+      border: 0.5px solid #AFA9EC; background: #fff;
+      color: #534AB7; font-size: 16px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.1s; flex-shrink: 0;
+    }
+    .item-card.selected .qty-btn { background: #EEEDFE; }
+    .qty-btn:hover { background: #EEEDFE; }
+    .qty-num { font-size: 13px; font-weight: 600; min-width: 18px; text-align: center; }
+
+    .cart-bar {
+      background: #EEEDFE; border: 0.5px solid #AFA9EC;
+      border-radius: 12px; padding: 1rem 1.25rem;
+      display: flex; align-items: center; justify-content: space-between;
+      margin-top: 0.5rem; position: sticky; bottom: 1rem;
+    }
+    .cart-count     { font-size: 13px; color: #3C3489; }
+    .cart-total-big { font-size: 17px; font-weight: 600; color: #26215C; }
+
+    .btn-bunbae {
+      background: #534AB7; color: #EEEDFE; border: none;
+      border-radius: 8px; padding: 11px 22px;
+      font-size: 14px; font-weight: 600; cursor: pointer;
+      transition: opacity 0.15s; white-space: nowrap;
+    }
+    .btn-bunbae:hover   { opacity: 0.85; }
+    .btn-bunbae:disabled { opacity: 0.35; cursor: not-allowed; }
+
+    .btn-ghost {
+      background: transparent; color: #666;
+      border: 0.5px solid #CECBF6; border-radius: 8px;
+      padding: 11px 22px; font-size: 14px; cursor: pointer;
+    }
+    .btn-ghost:hover { background: #EEEDFE; color: #534AB7; }
+
+    .back-row { display: flex; align-items: center; gap: 10px; margin-bottom: 1.5rem; }
+    .step-label { font-size: 13px; color: #7F77DD; }
+
+    .order-review {
+      background: #EEEDFE; border-radius: 8px;
+      padding: 1rem 1.25rem; margin-bottom: 1.25rem;
+    }
+    .review-line {
+      display: flex; justify-content: space-between;
+      font-size: 13px; color: #1a1a2e; padding: 3px 0;
+    }
+    .review-total {
+      border-top: 0.5px solid #AFA9EC; margin-top: 8px;
+      padding-top: 8px; font-weight: 600; font-size: 14px;
+    }
+    .review-total span:last-child { color: #534AB7; }
+
+    .form-group { margin-bottom: 1rem; max-width: 420px; }
+    .form-label {
+      font-size: 11px; color: #534AB7; letter-spacing: 1.5px;
+      text-transform: uppercase; font-weight: 600;
+      margin-bottom: 6px; display: block;
+    }
+    .form-input {
+      width: 100%; padding: 10px 12px;
+      border: 0.5px solid #CECBF6; border-radius: 8px;
+      background: #fff; color: #1a1a2e; font-size: 14px;
+      font-family: inherit;
+    }
+    .form-input:focus { outline: none; border-color: #534AB7; }
+
+    .pay-pills { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
+    .pay-pill {
+      padding: 7px 15px; border-radius: 999px;
+      border: 0.5px solid #CECBF6; font-size: 13px;
+      cursor: pointer; color: #1a1a2e; background: #fff;
+      transition: all 0.15s; font-family: inherit;
+    }
+    .pay-pill.active {
+      background: #534AB7; color: #EEEDFE;
+      border-color: #534AB7; font-weight: 600;
+    }
+
+    .page-actions { display: flex; align-items: center; gap: 12px; margin-top: 1.5rem; }
+    .sending-state { font-size: 13px; color: #7F77DD; }
+    .error-state {
+      font-size: 13px; color: #A32D2D; background: #FCEBEB;
+      border-radius: 8px; padding: 8px 12px; margin-top: 8px;
+    }
+
+    .success-wrap { text-align: center; padding: 2rem 0; }
+    .success-ears { display: flex; justify-content: center; gap: 8px; margin-bottom: 14px; }
+    .success-ear  { width: 13px; height: 28px; border: 2.5px solid #534AB7; border-radius: 999px; }
+    .success-title { font-size: 22px; font-weight: 600; color: #26215C; margin-bottom: 6px; }
+    .success-sub   { font-size: 14px; color: #534AB7; margin-bottom: 1.75rem; }
+
+    .receipt-card {
+      background: #fff; border: 0.5px solid #CECBF6;
+      border-radius: 12px; padding: 1.25rem;
+      max-width: 340px; margin: 0 auto 1.25rem; text-align: left;
+    }
+    .receipt-bun  { font-size: 16px; font-weight: 600; color: #534AB7; margin-bottom: 3px; }
+    .receipt-date { font-size: 12px; color: #7F77DD; margin-bottom: 12px; }
+    .receipt-name-row {
+      font-size: 14px; font-weight: 600; color: #1a1a2e;
+      margin-bottom: 10px; padding-bottom: 10px;
+      border-bottom: 0.5px solid #EEEDFE;
+    }
+    .receipt-item {
+      display: flex; justify-content: space-between;
+      font-size: 13px; color: #1a1a2e; padding: 3px 0;
+    }
+    .receipt-div  { border-top: 0.5px solid #CECBF6; margin: 8px 0; }
+    .receipt-total {
+      display: flex; justify-content: space-between;
+      font-size: 14px; font-weight: 600; color: #26215C;
+    }
+    .pay-badge {
+      display: inline-block; font-size: 11px; padding: 3px 10px;
+      border-radius: 999px; background: #EEEDFE;
+      color: #3C3489; font-weight: 600; margin-top: 8px;
+    }
+    .order-ref { font-size: 12px; color: #7F77DD; margin-top: 1rem; }
+    .order-ref span { color: #534AB7; font-weight: 600; }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <div class="bun-header">
+    <div class="bun-ears"><div class="ear"></div><div class="ear"></div></div>
+    <div class="bun-logo">Bunbae</div>
+    <div class="bun-sub">saltbread preorder</div>
+  </div>
+
+  <div id="screen-menu" class="screen active">
+    <div class="section-label">savory</div>
+    <div class="menu-grid" id="grid-savory"></div>
+    <div class="section-label" style="margin-top:1rem">sweet</div>
+    <div class="menu-grid" id="grid-sweet"></div>
+    <div class="cart-bar">
+      <div>
+        <div class="cart-total-big" id="cart-total">$0.00</div>
+        <div class="cart-count" id="cart-count">no items yet</div>
+      </div>
+      <button class="btn-bunbae" id="btn-next" disabled onclick="goTo('details')">review order →</button>
+    </div>
+  </div>
+
+  <div id="screen-details" class="screen">
+    <div class="back-row">
+      <button class="btn-ghost" onclick="goTo('menu')">← back</button>
+      <span class="step-label">your details</span>
+    </div>
+    <div class="order-review" id="order-review"></div>
+    <div class="form-group">
+      <label class="form-label">your name</label>
+      <input class="form-input" id="inp-name" type="text" placeholder="first and last name" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">payment</label>
+      <div class="pay-pills">
+        <div class="pay-pill" data-pay="cash on pickup" onclick="pickPay(this)">cash on pickup</div>
+        <div class="pay-pill" data-pay="Venmo" onclick="pickPay(this)">Venmo</div>
+        <div class="pay-pill" data-pay="Zelle" onclick="pickPay(this)">Zelle</div>
+        <div class="pay-pill" data-pay="card on pickup" onclick="pickPay(this)">card on pickup</div>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">notes (optional)</label>
+      <input class="form-input" id="inp-notes" type="text" placeholder="allergies, pickup notes..." />
+    </div>
+    <div id="err-msg" style="display:none" class="error-state">something went wrong — please try again</div>
+    <div class="page-actions">
+      <button class="btn-bunbae" id="btn-confirm" onclick="confirmOrder()" disabled>confirm preorder →</button>
+      <span class="sending-state" id="sending" style="display:none">saving your order...</span>
+    </div>
+  </div>
+
+  <div id="screen-success" class="screen">
+    <div class="success-wrap">
+      <div class="success-ears"><div class="success-ear"></div><div class="success-ear"></div></div>
+      <div class="success-title">you're bae!</div>
+      <div class="success-sub">preorder confirmed — see you at the pop-up</div>
+      <div class="receipt-card" id="receipt"></div>
+      <div class="order-ref">order ref: <span id="ref-num"></span></div>
+      <div style="margin-top:1.5rem">
+        <button class="btn-bunbae" onclick="newOrder()">place another order</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+<script>
+  const SHEET_URL = "https://script.google.com/macros/s/AKfycbx3-POtgjOWFvRlFwpnwDAaNFsTMRE_jndypT1tjKr2CThVaQ0JIC5AddwFhM4KpbzE/exec";
+
+  const MENU = {
+    savory: [
+      { id:1, name:"O.G",           desc:"hollowed saltbread, crunchy exterior, finished with seasalt", price:4.50 },
+      { id:2, name:"ham and cheese", desc:"smoked ham, mozzarella, creamy mayo, parsley",               price:6.00 },
+      { id:3, name:"egg mayo",       desc:"creamy egg and mayo filling with onions and parsley",         price:5.50 },
+      { id:4, name:'"indomie"',      desc:"indonesian style fried noodles, hot sauce, fried shallots",  price:6.00 },
+    ],
+    sweet: [
+      { id:5, name:"chocolate",      desc:"semi-sweet chocolate glaze topped with seasalt",              price:5.50 },
+      { id:6, name:"banana pudding", desc:"velvety vanilla cream, banana slices, nilla wafers",          price:5.50 },
+    ]
+  };
+
+  let cart = {}, selPay = "";
+
+  function buildGrid(items, gridId, tag) {
+    document.getElementById(gridId).innerHTML = items.map(item => `
+      <div class="item-card ${cart[item.id]?.qty > 0 ? 'selected' : ''}" id="card-${item.id}">
+        <span class="${tag}-tag">${tag}</span>
+        <div class="item-name">${item.name}</div>
+        <div class="item-desc">${item.desc}</div>
+        <div class="item-price">$${item.price.toFixed(2)}</div>
+        <div class="qty-row">
+          <button class="qty-btn" onclick="chg(${item.id},-1)">−</button>
+          <span class="qty-num" id="qty-${item.id}">${cart[item.id]?.qty || 0}</span>
+          <button class="qty-btn" onclick="chg(${item.id},1)">+</button>
+        </div>
+      </div>`).join("");
+  }
+
+  function renderMenu() {
+    buildGrid(MENU.savory, "grid-savory", "savory");
+    buildGrid(MENU.sweet,  "grid-sweet",  "sweet");
+    updateCart();
+  }
+
+  function allItems() { return [...MENU.savory, ...MENU.sweet]; }
+
+  function chg(id, d) {
+    const item = allItems().find(m => m.id === id);
+    if (!cart[id]) cart[id] = { item, qty: 0 };
+    cart[id].qty = Math.max(0, cart[id].qty + d);
+    if (cart[id].qty === 0) delete cart[id];
+    const qEl = document.getElementById("qty-" + id);
+    const cEl = document.getElementById("card-" + id);
+    if (qEl) qEl.textContent = cart[id]?.qty || 0;
+    if (cEl) cEl.className = "item-card" + (cart[id]?.qty > 0 ? " selected" : "");
+    updateCart();
+  }
+
+  function total() { return Object.values(cart).reduce((s, e) => s + e.item.price * e.qty, 0); }
+  function count() { return Object.values(cart).reduce((s, e) => s + e.qty, 0); }
+
+  function updateCart() {
+    const t = total(), c = count();
+    document.getElementById("cart-total").textContent = "$" + t.toFixed(2);
+    document.getElementById("cart-count").textContent = c === 0 ? "no items yet" : c + " item" + (c > 1 ? "s" : "") + " selected";
+    document.getElementById("btn-next").disabled = c === 0;
+  }
+
+  function goTo(s) {
+    document.querySelectorAll(".screen").forEach(x => x.classList.remove("active"));
+    document.getElementById("screen-" + s).classList.add("active");
+    window.scrollTo(0, 0);
+    if (s === "details") renderReview();
+  }
+
+  function renderReview() {
+    const entries = Object.values(cart);
+    document.getElementById("order-review").innerHTML =
+      entries.map(e => `<div class="review-line"><span>${e.qty}× ${e.item.name}</span><span>$${(e.item.price * e.qty).toFixed(2)}</span></div>`).join("") +
+      `<div class="review-line review-total"><span>total</span><span>$${total().toFixed(2)}</span></div>`;
+    checkReady();
+  }
+
+  function pickPay(el) {
+    document.querySelectorAll(".pay-pill").forEach(p => p.classList.remove("active"));
+    el.classList.add("active");
+    selPay = el.dataset.pay;
+    checkReady();
+  }
+
+  function checkReady() {
+    const name = document.getElementById("inp-name").value.trim();
+    document.getElementById("btn-confirm").disabled = !(name && selPay);
+  }
+
+  document.addEventListener("input", e => { if (e.target.id === "inp-name") checkReady(); });
+
+  async function confirmOrder() {
+    const name  = document.getElementById("inp-name").value.trim();
+    const notes = document.getElementById("inp-notes").value.trim();
+    const entries = Object.values(cart);
+    const ref = "BB-" + Date.now().toString().slice(-5);
+
+    document.getElementById("btn-confirm").disabled = true;
+    document.getElementById("sending").style.display = "inline";
+    document.getElementById("err-msg").style.display = "none";
+
+    try {
+      await fetch(SHEET_URL, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ref,
+          name,
+          items: entries.map(e => `${e.qty}x ${e.item.name}`).join(", "),
+          total: "$" + total().toFixed(2),
+          payment: selPay,
+          notes
+        })
+      });
+    } catch (err) {
+      document.getElementById("sending").style.display = "none";
+      document.getElementById("btn-confirm").disabled = false;
+      document.getElementById("err-msg").style.display = "block";
+      return;
+    }
+
+    document.getElementById("ref-num").textContent = ref;
+    document.getElementById("receipt").innerHTML = `
+      <div class="receipt-bun">Bunbae</div>
+      <div class="receipt-date">${new Date().toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"})}</div>
+      <div class="receipt-name-row">for ${name}</div>
+      ${entries.map(e => `<div class="receipt-item"><span>${e.qty}× ${e.item.name}</span><span>$${(e.item.price * e.qty).toFixed(2)}</span></div>`).join("")}
+      <div class="receipt-div"></div>
+      <div class="receipt-total"><span>total</span><span>$${total().toFixed(2)}</span></div>
+      <div class="pay-badge">${selPay}</div>
+      ${notes ? `<div style="font-size:12px;color:#7F77DD;margin-top:8px">note: ${notes}</div>` : ""}`;
+
+    document.getElementById("sending").style.display = "none";
+    goTo("success");
+  }
+
+  function newOrder() {
+    cart = {}; selPay = "";
+    document.getElementById("inp-name").value = "";
+    document.getElementById("inp-notes").value = "";
+    document.querySelectorAll(".pay-pill").forEach(p => p.classList.remove("active"));
+    renderMenu();
+    goTo("menu");
+  }
+
+  document.addEventListener("DOMContentLoaded", function() {
+  renderMenu();
+  });
+</script>
+</body>
+</html>
