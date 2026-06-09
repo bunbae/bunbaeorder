@@ -170,7 +170,6 @@
       <label class="form-label">payment method</label>
       <div class="pay-pills">
         <div class="pay-pill" data-pay="Venmo" onclick="pickPay(this)">Venmo</div>
-        <div class="pay-pill" data-pay="Zelle" onclick="pickPay(this)">Zelle</div>
       </div>
     </div>
 
@@ -244,19 +243,18 @@ const IMGS = {
   const ORDERS_OPEN = true;
   const SHEET_URL = "https://script.google.com/macros/s/AKfycbwAHti99LMjmMvQScNe7wEyDHPgPWh_Hn8opKRFS8fnwlwkDMZ7Z8H5xvP4WBLmDXre/exec";
   const VENMO_HANDLE = "@bunbae";
-  const ZELLE_HANDLE = "your-zelle@email.com";
   const MAX_BREADS = 50;
 
   const MENU = {
     savory: [
       { id:1, name:"O.G",           desc:"hollowed saltbread, crunchy exterior, finished with seasalt", price:4.50, img: IMGS.og },
-      { id:2, name:"ham and cheese", desc:"smoked ham, mozzarella, creamy mayo, parsley",               price:6.00, img: IMGS.hamcheese },
-      { id:3, name:"egg mayo",       desc:"creamy egg and mayo filling with onions and parsley",         price:5.50, img: IMGS.eggmayo },
+      { id:2, name:"ham and cheese", desc:"smoked ham, mozzarella, creamy mayo, parsley",               price:6.50, img: IMGS.hamcheese },
+      { id:3, name:"egg mayo",       desc:"creamy egg and mayo filling with onions and parsley",         price:6.50, img: IMGS.eggmayo },
       { id:4, name:'"indomie"',      desc:"indonesian style fried noodles, hot sauce, fried shallots",  price:6.00, img: IMGS.indomie },
     ],
     sweet: [
       { id:5, name:"chocolate",      desc:"semi-sweet chocolate glaze topped with seasalt",              price:5.50, img: IMGS.chocolate },
-      { id:6, name:"banana pudding", desc:"velvety vanilla cream, banana slices, nilla wafers",          price:5.50, img: IMGS.bananapudding },
+      { id:6, name:"banana pudding", desc:"velvety vanilla cream, banana slices, nilla wafers",          price:6.50, img: IMGS.bananapudding },
     ]
   };
 
@@ -366,13 +364,13 @@ const IMGS = {
   function pickPay(el) {
     document.querySelectorAll(".pay-pill").forEach(p => p.classList.remove("active"));
     el.classList.add("active");
-    selPay = el.dataset.pay;
+    selPay = "Venmo";
     document.getElementById("payment-instructions").style.display = "block";
     document.getElementById("pay-amount").textContent = "$" + total().toFixed(2);
-    document.getElementById("pay-handle").textContent = selPay === "Venmo" ? VENMO_HANDLE : ZELLE_HANDLE;
+    document.getElementById("pay-handle").textContent = VENMO_HANDLE;
     updatePayRef();
     checkReady();
-  }
+}
 
   function onDetailInput() { updatePayRef(); checkReady(); }
 
