@@ -97,7 +97,8 @@
     .receipt-div { border-top: 0.5px solid #CECBF6; margin: 8px 0; }
     .receipt-total { display: flex; justify-content: space-between; font-size: 14px; font-weight: 600; color: #26215C; }
     .pay-badge { display: inline-block; font-size: 11px; padding: 3px 10px; border-radius: 999px; background: #EEEDFE; color: #3C3489; font-weight: 600; margin-top: 8px; }
-    .order-ref { font-size: 12px; color: #7F77DD; margin-top: 1rem; }
+    .order-ref-line { font-size: 12px; color: #7F77DD; margin-top: 1rem; }
+    .order-ref-line span { color: #534AB7; font-weight: 600; }
     .pickup-note { background: #EEEDFE; border-radius: 8px; padding: 0.875rem 1rem; margin-top: 12px; font-size: 13px; color: #3C3489; line-height: 1.5; max-width: 380px; margin-left: auto; margin-right: auto; text-align: left; }
     .pickup-note strong { color: #26215C; display: block; margin-bottom: 3px; font-size: 14px; }
   </style>
@@ -153,7 +154,6 @@
       <span class="step-label">your details</span>
     </div>
     <div class="order-review" id="order-review"></div>
-
     <div class="form-group">
       <label class="form-label">your name</label>
       <input class="form-input" id="inp-name" type="text" placeholder="first and last name" oninput="onDetailInput()" />
@@ -219,11 +219,11 @@
       <div class="success-title">you're bae!</div>
       <div class="success-sub">preorder confirmed — a confirmation email is on its way!</div>
       <div class="receipt-card" id="receipt"></div>
-      <div class="order-ref">order ref: <span id="ref-num"></span></div>
+      <div class="order-ref-line">order ref: <span id="ref-num"></span></div>
       <div class="pickup-note">
         <strong>pickup location</strong>
         Trailside Apartments<br>4801 24th Ave NE, Building 2 Lobby<br>
-        <span style="color:#7F77DD;font-size:12px">pickup time TBD — check your email for updates!</span>
+        <span style="color:#7F77DD;font-size:12px">pickup time TBD — check your email and follow @bunbae.sea for updates!</span>
       </div>
       <div style="margin-top:1.5rem">
         <button class="btn-bunbae" onclick="newOrder()">place another order</button>
@@ -415,12 +415,13 @@ const IMGS = {
   }
 
   async function confirmOrder() {
-    const name  = document.getElementById("inp-name").value.trim();
-    const email = document.getElementById("inp-email").value.trim();
-    const phone = document.getElementById("inp-phone").value.trim();
-    const notes = document.getElementById("inp-notes").value.trim();
-    const entries = Object.values(cart);
-    const ref = currentRef;
+    const name     = document.getElementById("inp-name").value.trim();
+    const email    = document.getElementById("inp-email").value.trim();
+    const phone    = document.getElementById("inp-phone").value.trim();
+    const notes    = document.getElementById("inp-notes").value.trim();
+    const entries  = Object.values(cart);
+    const ref      = currentRef;
+    const itemsStr = entries.map(e => e.qty + "x " + e.item.name).join(", ");
 
     document.getElementById("btn-confirm").disabled = true;
     document.getElementById("sending").style.display = "inline";
@@ -440,10 +441,15 @@ const IMGS = {
         method: "POST", mode: "no-cors",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          ref, name, email, phone,
-          items: entries.map(e => e.qty + "x " + e.item.name).join(", "),
-          total: "$" + total().toFixed(2),
-          payment: selPay, notes, imageBase64
+          ref:        ref,
+          name:       name,
+          email:      email,
+          phone:      phone,
+          items:      itemsStr,
+          total:      "$" + total().toFixed(2),
+          payment:    selPay,
+          notes:      notes,
+          imageBase64: imageBase64
         })
       });
     } catch (err) {
