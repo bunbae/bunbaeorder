@@ -366,7 +366,7 @@ const IMGS = {
   function pickPay(el) {
     document.querySelectorAll(".pay-pill").forEach(p => p.classList.remove("active"));
     el.classList.add("active");
-    selPay = "Venmo";
+    selPay = el.dataset.pay;
     document.getElementById("payment-instructions").style.display = "block";
     document.getElementById("pay-amount").textContent = "$" + total().toFixed(2);
     document.getElementById("pay-handle").textContent = selPay === "Venmo" ? VENMO_HANDLE : ZELLE_HANDLE;
