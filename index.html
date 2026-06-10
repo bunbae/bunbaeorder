@@ -369,7 +369,7 @@ const IMGS = {
     selPay = "Venmo";
     document.getElementById("payment-instructions").style.display = "block";
     document.getElementById("pay-amount").textContent = "$" + total().toFixed(2);
-    document.getElementById("pay-handle").textContent = VENMO_HANDLE;
+    document.getElementById("pay-handle").textContent = selPay === "Venmo" ? VENMO_HANDLE : ZELLE_HANDLE;
     updatePayRef();
     checkReady();
 }
