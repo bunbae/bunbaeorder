@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang ="en">
+<head> 
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bunbae POS</title>
+</head>
+<body>
+    <div id="menu">
+        <h1>Bunbae POS</h1>
+        <button onclick="addItem('O.G', 4.50)">O.G<br>$4.50 </button>
+        <button onclick="addItem('honey garlic butter', 5.50)">honey garlic butter <br>$6.00 </button>
+        <button onclick="addItem('mochi earl grey', 6.50)">mochi earl grey<br>$5.50</button>
+        <button onclick="addItem('hard shell dubai chocolate', 6.50)">Hard shell Dubai chewy<br>$6.50</button>
+    </div>
+    <div id="order">
+        <h2>Current Order</h2>
+        <p id="order-list">no items yet</p>
+        <p>Total: <strong id="total">$0.00</strong></p>
+    </div>  
+    </body>
+<script>
+  let order = [];
+
+  function addItem(name, price) {
+    order.push({ name: name, price: price });
+    updateOrder();
+  }
+
+  function updateOrder() {
+    let total = 0;
+    let list = "<ul>";
+
+    for (let i = 0; i < order.length; i++) {
+        list += "<li>" + order[i].name + " — $" + order[i].price.toFixed(2) + "</li>";
+        total += order[i].price;
+    }
+
+    list += "</ul>";
+
+        document.getElementById("order-list").innerHTML = list;
+        document.getElementById("total").textContent = "$" + total.toFixed(2);
+    }
+</script>
+</html>
