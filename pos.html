@@ -1,45 +1,241 @@
 <!DOCTYPE html>
-<html lang ="en">
-<head> 
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Bunbae POS</title>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bunbae POS</title>
+  <style>
+    body {
+      font-family: -apple-system, sans-serif;
+      display: flex;
+      gap: 40px;
+      padding: 20px;
+      background: #f9f7ff;
+    }
+    h1 { color: #534AB7; }
+    #menu {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      width: 250px;
+    }
+    #menu button {
+      padding: 16px;
+      font-size: 16px;
+      background: #EEEDFE;
+      border: 0.5px solid #AFA9EC;
+      border-radius: 12px;
+      cursor: pointer;
+      text-align: left;
+      color: #1a1a2e;
+    }
+    #menu button:active {
+      background: #534AB7;
+      color: white;
+    }
+    #order {
+      flex: 1;
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      border: 0.5px solid #CECBF6;
+    }
+    #order h2 {
+      color: #534AB7;
+      margin-bottom: 12px;
+    }
+    #order button {
+      padding: 12px 20px;
+      border-radius: 8px;
+      border: none;
+      font-size: 15px;
+      cursor: pointer;
+      margin-top: 10px;
+      margin-right: 8px;
+    }
+    .btn-clear {
+      background: #EEEDFE;
+      color: #534AB7;
+    }
+    .btn-paid {
+      background: #534AB7;
+      color: white;
+    }
+    li button {
+      background: #FCEBEB;
+      color: #A32D2D;
+      border: none;
+      border-radius: 6px;
+      padding: 2px 8px;
+      cursor: pointer;
+      font-size: 14px;
+      margin-left: 8px;
+    }
+    #order ul {
+      padding-left: 16px;
+      line-height: 2;
+    }
+    #stats {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      border: 0.5px solid #CECBF6;
+      width: 200px;
+    }
+    #stats h3 {
+      color: #534AB7;
+      margin-bottom: 8px;
+      margin-top: 16px;
+    }
+    #stats h3:first-child {
+      margin-top: 0;
+    }
+    #sold-list div {
+      font-size: 14px;
+      padding: 3px 0;
+      color: #1a1a2e;
+    }
+    .btn-venmo {
+  background: #534AB7;
+  color: white;
+    }
+
+    .btn-zelle {
+    background: #534AB7;
+    color: white;
+    }
+  </style>
 </head>
 <body>
-    <div id="menu">
-        <h1>Bunbae POS</h1>
-        <button onclick="addItem('O.G', 4.50)">O.G<br>$4.50 </button>
-        <button onclick="addItem('honey garlic butter', 5.50)">honey garlic butter <br>$6.00 </button>
-        <button onclick="addItem('mochi earl grey', 6.50)">mochi earl grey<br>$5.50</button>
-        <button onclick="addItem('hard shell dubai chocolate', 6.50)">Hard shell Dubai chewy<br>$6.50</button>
+
+  <div id="menu">
+    <h1>Bunbae POS</h1>
+    <button onclick="addItem('O.G', 4.50)">O.G<br>$4.50</button>
+    <button onclick="addItem('honey garlic butter', 5.50)">honey garlic butter<br>$5.50</button>
+    <button onclick="addItem('mochi earl grey', 6.50)">mochi earl grey<br>$6.50</button>
+    <button onclick="addItem('hard shell dubai chocolate', 6.50)">hard shell dubai chocolate<br>$6.50</button>
+  </div>
+
+  <div id="order">
+    <h2>Current Order <span id="order-num" style="font-size:14px;color:#7F77DD;font-weight:400"></span></h2>
+    <div id="order-list">no items yet</div>
+    <p style="margin-top:12px">Total: <strong id="total">$0.00</strong></p>
+    <button class="btn-clear" onclick="clearOrder()">clear order</button>
+    <button class="btn-venmo" onclick="markPaid('Venmo')">confirm order — Venmo</button>
+    <button class="btn-zelle" onclick="markPaid('Zelle')">confirm order — Zelle</button>  </div>
+
+  <div id="stats">
+    <h3>sold today</h3>
+    <div id="sold-list">
+      <div>O.G: 0</div>
+      <div>honey garlic butter: 0</div>
+      <div>mochi earl grey: 0</div>
+      <div>hard shell dubai chocolate: 0</div>
     </div>
-    <div id="order">
-        <h2>Current Order</h2>
-        <p id="order-list">no items yet</p>
-        <p>Total: <strong id="total">$0.00</strong></p>
-    </div>  
-    </body>
+    <h3>revenue</h3>
+    <div><strong id="revenue">$0.00</strong></div>
+  </div>
+
+</body>
 <script>
   let order = [];
+  let revenue = 0;
+  const POS_SHEET_URL = "https://script.google.com/macros/s/AKfycbwk0fTynWRo0CBRixe1zPeM-VMOfY8-LNW_ar9FthIKxNMWXrNr2rqPQXJJbioPie6V4w/exec";
+  let orderCount = 0;
+  let sold = {
+    "O.G": 0,
+    "honey garlic butter": 0,
+    "mochi earl grey": 0,
+    "hard shell dubai chocolate": 0
+  };
 
   function addItem(name, price) {
-    order.push({ name: name, price: price });
+    let found = false;
+    for (let i = 0; i < order.length; i++) {
+      if (order[i].name === name) {
+        order[i].qty += 1;
+        found = true;
+        break;
+      }
+    }
+    if (!found) {
+      order.push({ name: name, price: price, qty: 1 });
+    }
+    updateOrder();
+  }
+
+  function removeItem(index) {
+    if (order[index].qty > 1) {
+      order[index].qty -= 1;
+    } else {
+      order.splice(index, 1);
+    }
     updateOrder();
   }
 
   function updateOrder() {
     let total = 0;
     let list = "<ul>";
-
     for (let i = 0; i < order.length; i++) {
-        list += "<li>" + order[i].name + " — $" + order[i].price.toFixed(2) + "</li>";
-        total += order[i].price;
+      list += "<li>" +
+        order[i].qty + "x " + order[i].name + " — $" + (order[i].price * order[i].qty).toFixed(2) +
+        " <button onclick='removeItem(" + i + ")'>−</button>" +
+        "</li>";
+      total += order[i].price * order[i].qty;
     }
-
     list += "</ul>";
+    document.getElementById("order-list").innerHTML = order.length === 0 ? "no items yet" : list;
+    document.getElementById("total").textContent = "$" + total.toFixed(2);
+  }
 
-        document.getElementById("order-list").innerHTML = list;
-        document.getElementById("total").textContent = "$" + total.toFixed(2);
+  function clearOrder() {
+    order = [];
+    document.getElementById("order-list").innerHTML = "no items yet";
+    document.getElementById("total").textContent = "$0.00";
+  }
+
+  function updateSold() {
+    let list = "";
+    for (let item in sold) {
+      list += "<div>" + item + ": " + sold[item] + "</div>";
     }
+    document.getElementById("sold-list").innerHTML = list;
+  }
+
+    function markPaid(payment) {
+    if (order.length === 0) {
+        alert("no items in order!");
+        return;
+    }
+    orderCount += 1;
+    let summary = "Order #" + orderCount + "\n";
+    for (let i = 0; i < order.length; i++) {
+        summary += order[i].qty + "x " + order[i].name + "\n";
+        if (sold[order[i].name] !== undefined) {
+        sold[order[i].name] += order[i].qty;
+        }
+    }
+    revenue += parseFloat(document.getElementById("total").textContent.replace("$", ""));
+    document.getElementById("revenue").textContent = "$" + revenue.toFixed(2);
+    document.getElementById("order-num").textContent = "— order #" + (orderCount + 1);
+    updateSold();
+
+    fetch(POS_SHEET_URL, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+        orderNum: orderCount,
+        items: order.map(e => e.qty + "x " + e.name).join(", "),
+        total: document.getElementById("total").textContent,
+        payment: payment
+        })
+    });
+
+    alert("Order #" + orderCount + " paid!\n" + summary + "Total: " + document.getElementById("total").textContent);
+    clearOrder();
+}
+
+  document.getElementById("order-num").textContent = "— order #1";
 </script>
 </html>
