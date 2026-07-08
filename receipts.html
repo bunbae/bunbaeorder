@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bunbae — Receipt Ledger</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Karla:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.0.4/tesseract.min.js"></script>
+<style>
+  :root{
+    --cream:#FBF3EC;
+    --paper:#FFFDF9;
+    --rose:#B5737A;
+    --rose-dark:#8F4E56;
+    --ink:#2E2622;
+    --ink-soft:#6B5D57;
+    --line:#E7D9CE;
+    --good:#5C7A5C;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--cream);
+    font-family:'Karla',sans-serif;
+    color:var(--ink);
+    min-height:100vh;
+    padding-bottom:40px;
+  }
+  header{
+    padding:28px 20px 20px;
+    text-align:center;
+  }
+  header .eyebrow{
+    font-size:11px;
+    letter-spacing:2px;
+    text-transform:uppercase;
+    color:var(--rose-dark);
+    font-weight:700;
+  }
+  header h1{
+    font-family:'Fraunces',serif;
+    font-weight:600;
+    font-size:30px;
+    margin:6px 0 2px;
+  }
+  header p{
+    font-size:13px;
+    color:var(--ink-soft);
+    margin:0;
+  }
+  .wrap{
+    max-width:480px;
+    margin:0 auto;
+    padding:0 16px;
+  }
+  .card{
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:20px;
+    margin-bottom:16px;
+    box-shadow:0 2px 10px rgba(143,78,86,0.06);
+  }
+  .card h2{
+    font-family:'Fraunces',serif;
+    font-size:17px;
+    margin:0 0 14px;
+    font-weight:600;
+  }
+  label{
+    display:block;
+    font-size:12px;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:0.5px;
+    color:var(--ink-soft);
+    margin-bottom:6px;
+  }
+  input[type=text], input[type=number], input[type=date], select{
+    width:100%;
+    padding:11px 12px;
+    border-radius:9px;
+    border:1px solid var(--line);
+    background:#fff;
+    font-family:'Karla',sans-serif;
+    font-size:15px;
+    color:var(--ink);
+    margin-bottom:14px;
+  }
+  input:focus, select:focus{
+    outline:2px solid var(--rose);
+    outline-offset:1px;
+  }
+  .payer-grid{
+    display:flex;
+    gap:8px;
+    margin-bottom:14px;
+  }
+  .payer-btn{
+    flex:1;
+    padding:11px 6px;
+    border-radius:9px;
+    border:1px solid var(--line);
+    background:#fff;
+    font-family:'Karla',sans-serif;
+    font-weight:700;
+    font-size:13px;
+    color:var(--ink-soft);
+    cursor:pointer;
+  }
+  .payer-btn.active{
+    background:var(--rose);
+    border-color:var(--rose);
+    color:#fff;
+  }
+  .photo-zone{
+    border:2px dashed var(--line);
+    border-radius:12px;
+    padding:18px;
+    text-align:center;
+    margin-bottom:14px;
+    cursor:pointer;
+    background:#fffaf6;
+  }
+  .photo-zone.has-img{ padding:8px; }
+  .photo-zone img{
+    max-width:100%;
+    max-height:220px;
+    border-radius:8px;
+    display:block;
+    margin:0 auto;
+  }
+  .photo-zone .hint{ font-size:13px; color:var(--ink-soft); }
+  .photo-zone .hint b{ color:var(--rose-dark); }
+  input[type=file]{ display:none; }
+  .ocr-status{
+    font-size:12px;
+    color:var(--rose-dark);
+    margin:-8px 0 14px;
+    min-height:14px;
+  }
+  button.submit{
+    width:100%;
+    padding:14px;
+    border:none;
+    border-radius:10px;
+    background:var(--rose-dark);
+    color:#fff;
+    font-family:'Karla',sans-serif;
+    font-weight:700;
+    font-size:15px;
+    cursor:pointer;
+  }
+  button.submit:disabled{ opacity:0.5; }
+  button.link{
+    background:none;
+    border:none;
+    color:var(--rose-dark);
+    font-size:12px;
+    font-weight:700;
+    text-decoration:underline;
+    cursor:pointer;
+    padding:0;
+  }
+  .toast{
+    font-size:13px;
+    text-align:center;
+    margin-top:10px;
+    min-height:16px;
+  }
+  .toast.ok{ color:var(--good); font-weight:700; }
+  .toast.err{ color:var(--rose-dark); font-weight:700; }
+  .ticket{
+    position:relative;
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:12px 14px;
+    margin-bottom:10px;
+    font-size:13px;
+  }
+  .ticket:before, .ticket:after{
+    content:"";
+    position:absolute;
+    width:12px; height:12px;
+    background:var(--cream);
+    border-radius:50%;
+    top:50%;
+    transform:translateY(-50%);
+  }
+  .ticket:before{ left:-6px; }
+  .ticket:after{ right:-6px; }
+  .ticket-top{
+    display:flex;
+    justify-content:space-between;
+    font-weight:700;
+    margin-bottom:4px;
+  }
+  .ticket-amt{ color:var(--rose-dark); font-family:'Fraunces',serif; font-size:16px; }
+  .ticket-meta{ color:var(--ink-soft); font-size:11.5px; }
+  .empty{ text-align:center; color:var(--ink-soft); font-size:13px; padding:20px 0; }
+  .setup-note{ font-size:12px; color:var(--ink-soft); line-height:1.5; }
+</style>
+</head>
+<body>
+<header>
+  <div class="eyebrow">Bunbae · Ops</div>
+  <h1>Receipt Ledger</h1>
+  <p>Snap it, tag who paid, it lands in the sheet.</p>
+</header>
+
+<div class="wrap">
+
+  <div class="card" id="setupCard" style="display:none;">
+    <h2>One-time setup</h2>
+    <p class="setup-note">Paste your Apps Script Web App URL and the 3 names on the team. This is only needed once per device.</p>
+    <label>Apps Script Web App URL</label>
+    <input type="text" id="scriptUrlInput" placeholder="https://script.google.com/macros/s/.../exec">
+    <label>Payer 1 name</label>
+    <input type="text" id="p1Input" placeholder="e.g. Emelie">
+    <label>Payer 2 name</label>
+    <input type="text" id="p2Input" placeholder="e.g. co-founder name">
+    <label>Payer 3 name</label>
+    <input type="text" id="p3Input" placeholder="e.g. co-founder name">
+    <button class="submit" id="saveSetupBtn">Save setup</button>
+  </div>
+
+  <div class="card" id="mainCard" style="display:none;">
+    <h2>New receipt</h2>
+
+    <label>Photo</label>
+    <div class="photo-zone" id="photoZone">
+      <div class="hint">Tap to <b>take a photo</b> or upload a receipt</div>
+    </div>
+    <input type="file" id="photoInput" accept="image/*" capture="environment">
+    <div class="ocr-status" id="ocrStatus"></div>
+
+    <label>Who paid</label>
+    <div class="payer-grid" id="payerGrid"></div>
+
+    <label>Date</label>
+    <input type="date" id="dateInput">
+
+    <label>Amount</label>
+    <input type="number" step="0.01" id="amountInput" placeholder="0.00">
+
+    <label>Vendor / note (optional)</label>
+    <input type="text" id="noteInput" placeholder="e.g. Uwajimaya — flour & sugar">
+
+    <button class="submit" id="submitBtn">Save to sheet</button>
+    <div class="toast" id="toast"></div>
+  </div>
+
+  <div class="card" id="logCard" style="display:none;">
+    <h2>Recent entries</h2>
+    <div id="logList"></div>
+  </div>
+
+  <div style="text-align:center;">
+    <button class="link" id="editSetupBtn">Edit setup</button>
+  </div>
+
+</div>
+
+<script>
+const SETUP_KEY = 'bunbae-receipts-setup';
+const LOG_KEY = 'bunbae-receipts-log';
+let setup = null;
+let selectedPayer = null;
+let currentImageDataUrl = null;
+
+const setupCard = document.getElementById('setupCard');
+const mainCard = document.getElementById('mainCard');
+const logCard = document.getElementById('logCard');
+const photoZone = document.getElementById('photoZone');
+const photoInput = document.getElementById('photoInput');
+const ocrStatus = document.getElementById('ocrStatus');
+const payerGrid = document.getElementById('payerGrid');
+const dateInput = document.getElementById('dateInput');
+const amountInput = document.getElementById('amountInput');
+const noteInput = document.getElementById('noteInput');
+const submitBtn = document.getElementById('submitBtn');
+const toast = document.getElementById('toast');
+const logList = document.getElementById('logList');
+
+function todayStr(){
+  const d = new Date();
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+
+async function loadSetup(){
+  try{
+    const res = await window.storage.get(SETUP_KEY, true);
+    if(res && res.value){
+      setup = JSON.parse(res.value);
+    }
+  }catch(e){ setup = null; }
+  renderSetupState();
+}
+
+function renderSetupState(){
+  if(!setup || !setup.scriptUrl || !setup.payers || setup.payers.length !== 3){
+    setupCard.style.display = 'block';
+    mainCard.style.display = 'none';
+    logCard.style.display = 'none';
+  } else {
+    setupCard.style.display = 'none';
+    mainCard.style.display = 'block';
+    logCard.style.display = 'block';
+    buildPayerGrid();
+    dateInput.value = todayStr();
+    loadLog();
+  }
+}
+
+document.getElementById('saveSetupBtn').onclick = async () => {
+  const url = document.getElementById('scriptUrlInput').value.trim();
+  const p1 = document.getElementById('p1Input').value.trim();
+  const p2 = document.getElementById('p2Input').value.trim();
+  const p3 = document.getElementById('p3Input').value.trim();
+  if(!url || !p1 || !p2 || !p3){
+    alert('Please fill in the URL and all 3 names.');
+    return;
+  }
+  setup = { scriptUrl: url, payers: [p1, p2, p3] };
+  try{
+    await window.storage.set(SETUP_KEY, JSON.stringify(setup), true);
+  }catch(e){
+    alert('Could not save setup, please try again.');
+    return;
+  }
+  renderSetupState();
+};
+
+document.getElementById('editSetupBtn').onclick = () => {
+  if(setup){
+    document.getElementById('scriptUrlInput').value = setup.scriptUrl || '';
+    document.getElementById('p1Input').value = setup.payers[0] || '';
+    document.getElementById('p2Input').value = setup.payers[1] || '';
+    document.getElementById('p3Input').value = setup.payers[2] || '';
+  }
+  setupCard.style.display = 'block';
+  mainCard.style.display = 'none';
+  logCard.style.display = 'none';
+};
+
+function buildPayerGrid(){
+  payerGrid.innerHTML = '';
+  selectedPayer = null;
+  setup.payers.forEach(name => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'payer-btn';
+    btn.textContent = name;
+    btn.onclick = () => {
+      selectedPayer = name;
+      [...payerGrid.children].forEach(c => c.classList.remove('active'));
+      btn.classList.add('active');
+    };
+    payerGrid.appendChild(btn);
+  });
+}
+
+photoZone.onclick = () => photoInput.click();
+
+photoInput.onchange = async () => {
+  const file = photoInput.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    currentImageDataUrl = e.target.result;
+    photoZone.classList.add('has-img');
+    photoZone.innerHTML = '';
+    const img = document.createElement('img');
+    img.src = currentImageDataUrl;
+    photoZone.appendChild(img);
+    runOcr(currentImageDataUrl);
+  };
+  reader.readAsDataURL(file);
+};
+
+async function runOcr(dataUrl){
+  if(typeof Tesseract === 'undefined'){
+    ocrStatus.textContent = 'OCR unavailable — enter details manually.';
+    return;
+  }
+  ocrStatus.textContent = 'Reading receipt…';
+  try{
+    const result = await Tesseract.recognize(dataUrl, 'eng');
+    const text = result.data.text || '';
+    prefillFromText(text);
+    ocrStatus.textContent = 'Pre-filled from photo — double check before saving.';
+  }catch(err){
+    ocrStatus.textContent = 'Could not read photo automatically — enter details manually.';
+  }
+}
+
+function prefillFromText(text){
+  // Amount: look for the largest $-prefixed or decimal number, prefer lines with "total"
+  const lines = text.split('\n');
+  let bestAmount = null;
+  const totalLineRegex = /(total|amount due|balance)/i;
+  const amountRegex = /\$?\s?(\d{1,5}\.\d{2})/g;
+
+  let totalLineAmounts = [];
+  lines.forEach(line => {
+    if(totalLineRegex.test(line)){
+      let m;
+      const re = /\$?\s?(\d{1,5}\.\d{2})/g;
+      while((m = re.exec(line)) !== null){
+        totalLineAmounts.push(parseFloat(m[1]));
+      }
+    }
+  });
+  if(totalLineAmounts.length){
+    bestAmount = Math.max(...totalLineAmounts);
+  } else {
+    let all = [];
+    let m;
+    while((m = amountRegex.exec(text)) !== null){
+      all.push(parseFloat(m[1]));
+    }
+    if(all.length) bestAmount = Math.max(...all);
+  }
+  if(bestAmount !== null && !isNaN(bestAmount)){
+    amountInput.value = bestAmount.toFixed(2);
+  }
+
+  // Date: look for common formats mm/dd/yyyy, mm-dd-yyyy, month name dd, yyyy
+  const dateRegexes = [
+    /(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/,
+    /(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.?\s+(\d{1,2}),?\s+(\d{4})/i
+  ];
+  for(const re of dateRegexes){
+    const m = text.match(re);
+    if(m){
+      let parsed = null;
+      if(re === dateRegexes[0]){
+        let mm = parseInt(m[1]), dd = parseInt(m[2]), yyyy = parseInt(m[3]);
+        if(yyyy < 100) yyyy += 2000;
+        if(mm >=1 && mm <=12 && dd>=1 && dd<=31){
+          parsed = new Date(yyyy, mm-1, dd);
+        }
+      } else {
+        parsed = new Date(m[0]);
+      }
+      if(parsed && !isNaN(parsed.getTime())){
+        dateInput.value = parsed.getFullYear()+'-'+String(parsed.getMonth()+1).padStart(2,'0')+'-'+String(parsed.getDate()).padStart(2,'0');
+        break;
+      }
+    }
+  }
+
+  // Vendor: first non-empty line that looks like a name (letters, not just numbers/symbols)
+  for(const line of lines){
+    const clean = line.trim();
+    if(clean.length > 2 && /[a-zA-Z]{3,}/.test(clean) && !totalLineRegex.test(clean)){
+      if(!noteInput.value){
+        noteInput.value = clean.slice(0, 60);
+      }
+      break;
+    }
+  }
+}
+
+submitBtn.onclick = async () => {
+  if(!selectedPayer){
+    toast.textContent = 'Pick who paid first.';
+    toast.className = 'toast err';
+    return;
+  }
+  if(!dateInput.value){
+    toast.textContent = 'Add a date.';
+    toast.className = 'toast err';
+    return;
+  }
+  if(!amountInput.value || parseFloat(amountInput.value) <= 0){
+    toast.textContent = 'Add a valid amount.';
+    toast.className = 'toast err';
+    return;
+  }
+
+  const payload = {
+    date: dateInput.value,
+    payer: selectedPayer,
+    vendor: noteInput.value || '',
+    amount: parseFloat(amountInput.value).toFixed(2)
+  };
+
+  submitBtn.disabled = true;
+  toast.textContent = 'Saving…';
+  toast.className = 'toast';
+
+  try{
+    await fetch(setup.scriptUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(payload)
+    });
+    toast.textContent = 'Saved to the sheet.';
+    toast.className = 'toast ok';
+    await appendToLog(payload);
+    resetForm();
+  }catch(err){
+    toast.textContent = 'Could not reach the sheet — check the Apps Script URL.';
+    toast.className = 'toast err';
+  }
+  submitBtn.disabled = false;
+};
+
+function resetForm(){
+  amountInput.value = '';
+  noteInput.value = '';
+  dateInput.value = todayStr();
+  currentImageDataUrl = null;
+  photoZone.classList.remove('has-img');
+  photoZone.innerHTML = '<div class="hint">Tap to <b>take a photo</b> or upload a receipt</div>';
+  photoInput.value = '';
+  ocrStatus.textContent = '';
+  selectedPayer = null;
+  [...payerGrid.children].forEach(c => c.classList.remove('active'));
+}
+
+async function appendToLog(entry){
+  let log = [];
+  try{
+    const res = await window.storage.get(LOG_KEY, true);
+    if(res && res.value) log = JSON.parse(res.value);
+  }catch(e){ log = []; }
+  log.unshift({ ...entry, savedAt: new Date().toISOString() });
+  log = log.slice(0, 25);
+  try{
+    await window.storage.set(LOG_KEY, JSON.stringify(log), true);
+  }catch(e){}
+  renderLog(log);
+}
+
+async function loadLog(){
+  let log = [];
+  try{
+    const res = await window.storage.get(LOG_KEY, true);
+    if(res && res.value) log = JSON.parse(res.value);
+  }catch(e){ log = []; }
+  renderLog(log);
+}
+
+function renderLog(log){
+  if(!log || !log.length){
+    logList.innerHTML = '<div class="empty">No receipts logged yet.</div>';
+    return;
+  }
+  logList.innerHTML = '';
+  log.forEach(item => {
+    const t = document.createElement('div');
+    t.className = 'ticket';
+    t.innerHTML = `
+      <div class="ticket-top">
+        <span>${item.payer}</span>
+        <span class="ticket-amt">$${item.amount}</span>
+      </div>
+      <div class="ticket-meta">${item.date}${item.vendor ? ' · ' + item.vendor : ''}</div>
+    `;
+    logList.appendChild(t);
+  });
+}
+
+loadSetup();
+</script>
+</body>
+</html>
