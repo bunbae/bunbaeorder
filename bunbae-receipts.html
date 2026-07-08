@@ -291,10 +291,8 @@ function todayStr(){
 
 async function loadSetup(){
   try{
-    const res = await window.storage.get(SETUP_KEY, true);
-    if(res && res.value){
-      setup = JSON.parse(res.value);
-    }
+    const raw = localStorage.getItem(SETUP_KEY);
+    if(raw) setup = JSON.parse(raw);
   }catch(e){ setup = null; }
   renderSetupState();
 }
@@ -325,7 +323,7 @@ document.getElementById('saveSetupBtn').onclick = async () => {
   }
   setup = { scriptUrl: url, payers: [p1, p2, p3] };
   try{
-    await window.storage.set(SETUP_KEY, JSON.stringify(setup), true);
+    localStorage.setItem(SETUP_KEY, JSON.stringify(setup));
   }catch(e){
     alert('Could not save setup, please try again.');
     return;
@@ -523,26 +521,21 @@ function resetForm(){
 }
 
 async function appendToLog(entry){
-  let log = [];
-  try{
-    const res = await window.storage.get(LOG_KEY, true);
-    if(res && res.value) log = JSON.parse(res.value);
-  }catch(e){ log = []; }
-  log.unshift({ ...entry, savedAt: new Date().toISOString() });
-  log = log.slice(0, 25);
-  try{
-    await window.storage.set(LOG_KEY, JSON.stringify(log), true);
-  }catch(e){}
-  renderLog(log);
+  // The row was already appended to the Sheet by the POST above.
+  // Just re-fetch the live list so everyone's log stays in sync with the actual Sheet.
+  await loadLog();
 }
 
 async function loadLog(){
-  let log = [];
+  if(!setup || !setup.scriptUrl) return;
+  logList.innerHTML = '<div class="empty">Loading…</div>';
   try{
-    const res = await window.storage.get(LOG_KEY, true);
-    if(res && res.value) log = JSON.parse(res.value);
-  }catch(e){ log = []; }
-  renderLog(log);
+    const res = await fetch(setup.scriptUrl + '?t=' + Date.now());
+    const data = await res.json();
+    renderLog(data.entries || []);
+  }catch(e){
+    logList.innerHTML = '<div class="empty">Could not load recent entries — check your connection.</div>';
+  }
 }
 
 function renderLog(log){
