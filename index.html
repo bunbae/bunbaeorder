@@ -303,7 +303,7 @@ const IMGS = {
   function buildGrid(items, gridId, tag) {
     document.getElementById(gridId).innerHTML = items.map(item => `
       <div class="item-card ${cart[item.id]?.qty > 0 ? "selected" : ""}" id="card-${item.id}">
-        <div class="item-img-wrap"><img class="item-img" src="${item.img}" alt="${item.name}" /></div>
+        ${item.img ? `<div class="item-img-wrap"><img class="item-img" src="${item.img}" alt="${item.name}" /></div>` : ""}
         <span class="${tag}-tag">${tag}</span>
         <div class="item-name">${item.name}</div>
         <div class="item-desc">${item.desc}</div>
@@ -323,7 +323,7 @@ const IMGS = {
     updateCart();
   }
 
-  function allItems() { return [...MENU.savory, ...MENU.sweet]; }
+  function allItems() { return [...MENU.savory, ...MENU.sweet, ...MENU.buttertteok]; }
 
   function chg(id, d) {
     const item = allItems().find(m => m.id === id);
